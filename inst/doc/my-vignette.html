@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Satyaprakash Nayak" />
+
+<meta name="date" content="2026-10-04" />
+
+<title>sundialr - An Interface to ‘SUNDIALS’ Ordinary Differential Equation (ODE) Solvers</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">sundialr - An Interface to ‘SUNDIALS’
+Ordinary Differential Equation (ODE) Solvers</h1>
+<h4 class="author">Satyaprakash Nayak</h4>
+<h4 class="date">2026-10-04</h4>
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Ordinary Differential Equations (ODEs) describe the rate of change of
+dependent variables with respect to a single independent variable and
+are used in many fields to model behavior of the system. There are many
+good <code>C</code> libraries available to solve (i.e., integrate
+systems of ODEs) and <a href="https://computing.llnl.gov/projects/sundials">SUNDIALS</a>
+available from the Lawrence Livermore National Laboratory is a one of
+the most popular and well-respected <code>C</code> library for solving
+non-stiff and stiff systems of ODEs.</p>
+<p>Currently, this package provides an interface to the
+<code>CVODE</code> and <code>CVODES</code> function (serial version) in
+the library which is used to solve ODEs (or Initial Value Problems) and
+calculate sensitivities.</p>
+<p>The four exported functions from the package are:</p>
+<ul>
+<li><p><code>cvode</code> - An interface to the <code>CVODE</code>
+function in <code>SUNDIALS</code> to solve a system of ODEs.</p></li>
+<li><p><code>cvodes</code> - An interface to the <code>CVODES</code>
+function in <code>SUNDIALS</code> to calculate forward sensitivites with
+respect to parameters of the ODE system.</p></li>
+<li><p><code>ida</code> - An interface to the <code>IDA</code> function
+in <code>SUNDIALS</code> to solve a system of Differential-Algebraic
+Equations (DAEs).</p></li>
+<li><p><code>cvsolve</code> - A convenient interface to solve a system
+of ODEs with discontinuities in solution.</p></li>
+</ul>
+<p>In future, we plan to provide interface for the other solvers (i.e.,
+<code>IDA/IDAS</code> and <code>ARCODE</code> in the library also. Right
+now, this package serves as a test case for providing an interface to
+the <code>SUNDIALS</code> library for <code>R</code> users.</p>
+<p><em>One of the advantage of using this package is that all the source
+code of the <code>SUNDIALS</code> library is bundled with the package
+itself, so it does not require the <code>SUNDIALS</code> library to be
+installed on the machine separately (which is sometimes non trivial on a
+Windows machine).</em></p>
+</div>
+<div id="system-of-odes" class="section level2">
+<h2>System of ODEs</h2>
+<p>As described in the link above, the problem is from chemical
+kinetics, and consists of the following three rate equations:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\frac{dy_1}{dt} &amp;= -.04 \times y_1 + 10^4 \times y_2 \times y_3  \\
+\frac{dy_2}{dt} &amp;= .04 \times y_1 - 10^4 \times y_2 \times y_3 - 3
+\times 10^7  \times y_2^2 \\
+\frac{dy_3}{dt} &amp;= 3 \times 10^7 \times y_2^2
+\end{aligned}
+\]</span></p>
+<p>with time interval from <span class="math inline">\(t = 0.0\)</span>
+to <span class="math inline">\(t = 4 \times 10^{10}\)</span> and initial
+conditions: <span class="math display">\[ y_1  = 1.0 , ~y_2 = y_3 = 0
+\]</span></p>
+<p><strong>The problem is stiff.</strong></p>
+<p>The original example , While integrating the system, also uses the
+rootfinding feature to find the points at which</p>
+<p><span class="math display">\[ y_1 = 1 \times 10^{-4} \]</span> or at
+which <span class="math display">\[ y_3 = 0.01 \]</span> but currently
+root-finding is not supported in this version. As in the original
+example, this package also solves the problem with the <code>BDF</code>
+method, Newton iteration with the <code>SUNDENSE</code> dense linear
+solver, however, without a user-supplied Jacobian routine (unlike the
+original example). The future versions may include an ability to provide
+Jacobian calculated analytically or via automatic differentiation.
+<code>CVODE</code> uses a scalar relative tolerance and a vector
+absolute tolerance (which can be provided as an input). Output is
+printed in decades from <span class="math inline">\(t = 0.4\)</span> to
+<span class="math inline">\(t = 4 \times 10^{10}\)</span> in this
+example.</p>
+</div>
+<div id="writing-the-differential-equations" class="section level2">
+<h2>Writing the Differential Equations</h2>
+<div id="using-r" class="section level3">
+<h3>Using R</h3>
+<p>Differential equations can be written as an <code>R</code> function
+or as an <code>Rcpp</code> function. Differential equations function
+must be written as</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="cf">function</span>(t, y, p){</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="co"># code to write differential equations</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  <span class="co"># using parameter vector (p) and state/entity vector (y)</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>  <span class="co"># should return `ydot`, the vector representing</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>  <span class="co"># rate of change of entities in `y`</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>  <span class="co"># length of `ydot` must be equal to `y1</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>}</span></code></pre></div>
+<p>where <code>t</code> represents time, <code>y</code> is the vector
+describing the values of states/entities of the ODE system at time
+<code>t</code> and <code>p</code> is the vector of parameters used to
+define the ODEs. The output of this function is a vector of rate of
+change of entities of <code>y</code>.</p>
+<p>The key aspect to keep in mind is that the signature of the function
+must be <code>function(t,y,p)</code>. As an example, we try to solve the
+<code>cv_Roberts_dns.c</code> problem described above, the original code
+can be found <a href="https://github.com/LLNL/sundials/blob/master/examples/cvode/serial/cvRoberts_dns.c">here</a>.
+An example of an <code>R</code> function is as follows:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>ODE_R <span class="ot">&lt;-</span> <span class="cf">function</span>(t, y, p){</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>   <span class="do">## initialize the derivative vector</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>   ydot <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">&quot;numeric&quot;</span>, <span class="at">length =</span> <span class="fu">length</span>(y))</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>   </span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>   <span class="do">## p (parameter vector input) is  [-0.04 1e04 3e07]</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>   </span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>   ydot[<span class="dv">1</span>] <span class="ot">=</span> p[<span class="dv">1</span>]<span class="sc">*</span>y[<span class="dv">1</span>] <span class="sc">+</span> p[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">3</span>]</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>   ydot[<span class="dv">2</span>] <span class="ot">=</span> <span class="sc">-</span>p[<span class="dv">1</span>]<span class="sc">*</span>y[<span class="dv">1</span>] <span class="sc">-</span> p[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">3</span>] <span class="sc">-</span> p[<span class="dv">3</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>   ydot[<span class="dv">3</span>] <span class="ot">=</span> p[<span class="dv">3</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>   ydot      <span class="do">## return ydot</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>}</span></code></pre></div>
+<p>where <code>p</code> is a parameter vector with the values
+<code>[-0.04 1e04 3e07]</code>.</p>
+</div>
+<div id="using-rcpp" class="section level3">
+<h3>Using Rcpp</h3>
+<p>Also, since this package using <code>Rcpp</code> to bundle the C
+code, we can use the notation used in <code>Rcpp</code> to describe the
+system of ODEs. The <code>cv_Roberts_dns</code> problem describe above
+can be described in an <code>Rcpp</code> function as follows (indices in
+<code>C++</code> start from <code>0</code>, functions need to declare
+their return type, here <code>NumericVector</code> and every expression
+ends in a semicolon, <code>;</code>) :</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;Rcpp.h&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Rcpp<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">// [[Rcpp::export]]</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>NumericVector ODE_Rcpp <span class="op">(</span><span class="dt">double</span> t<span class="op">,</span> NumericVector y<span class="op">){</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="co">// Initialize ydot filled with zeros</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  NumericVector ydot<span class="op">(</span>y<span class="op">.</span>length<span class="op">());</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="co">// p (parameter vector) is [-0.04 1e04 3e07]</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  ydot<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> p<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">*</span> y<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> p<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">*</span> y<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">*</span> y<span class="op">[</span><span class="dv">2</span><span class="op">];</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>  ydot<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="op">-</span>p<span class="op">[</span><span class="dv">0</span><span class="op">]*</span>y<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">-</span> p<span class="op">[</span><span class="dv">1</span><span class="op">]*</span>y<span class="op">[</span><span class="dv">1</span><span class="op">]*</span>y<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">-</span> p<span class="op">[</span><span class="dv">2</span><span class="op">]*</span>y<span class="op">[</span><span class="dv">1</span><span class="op">]*</span>y<span class="op">[</span><span class="dv">1</span><span class="op">]</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  ydot<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">=</span> p<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">*</span> y<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">*</span> y<span class="op">[</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>  <span class="cf">return</span> ydot<span class="op">;</span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The above is a re-write of the <code>cvRoberts_dns.c</code> example
+in the documentation of <code>CVODE</code>.</p>
+</div>
+<div id="putting-everything-together" class="section level3">
+<h3>Putting everything together</h3>
+<p>The entire <code>R</code> file to create right hand side of ODE
+function (which calculates rates of change) is as follows (also found <a href="https://github.com/sn248/sundialr/blob/master/inst/examples/cv_Roberts_dns.r">here</a>):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># ODEs described by an R function</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>ODE_R <span class="ot">&lt;-</span> <span class="cf">function</span>(t, y, p){</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>   <span class="do">## initialize the derivative vector</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>   ydot <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">&quot;numeric&quot;</span>, <span class="at">length =</span> <span class="fu">length</span>(y))</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>   </span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>   <span class="do">## p (parameter vector) is  [-0.04 1e04 3e07]</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>   </span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>   ydot[<span class="dv">1</span>] <span class="ot">=</span> p[<span class="dv">1</span>]<span class="sc">*</span>y[<span class="dv">1</span>] <span class="sc">+</span> p[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">3</span>]</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>   ydot[<span class="dv">2</span>] <span class="ot">=</span> <span class="sc">-</span>p[<span class="dv">1</span>]<span class="sc">*</span>y[<span class="dv">1</span>] <span class="sc">-</span> p[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">3</span>] <span class="sc">-</span> p[<span class="dv">3</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>   ydot[<span class="dv">3</span>] <span class="ot">=</span> p[<span class="dv">3</span>]<span class="sc">*</span>y[<span class="dv">2</span>]<span class="sc">*</span>y[<span class="dv">2</span>]</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>   ydot      <span class="do">## return ydot</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>}</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co"># ODEs can also be described using Rcpp</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>Rcpp<span class="sc">::</span><span class="fu">sourceCpp</span>(<span class="at">code =</span> <span class="st">&#39;</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="st">#include &lt;Rcpp.h&gt;</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="st">using namespace Rcpp;</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="st">// [[Rcpp::export]]</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="st">NumericVector ODE_Rcpp (double t, NumericVector y){</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="st">  // Initialize ydot filled with zeros</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="st">  NumericVector ydot(y.length());</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="st">  // p (parameter vector) is [-0.04 1e04 3e07]</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="st">  ydot[0] = p[0] * y[0] + p[1] * y[1] * y[2];</span></span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="st">  ydot[1] = -p[0]*y[0] - p[1]*y[1]*y[2] - p[2]*y[1]*y[1]</span></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="st">  ydot[2] = p[2] * y[1] * y[1];</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="st">  return ydot;</span></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="st">}&#39;</span>)</span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="co"># Generate time vector, IC and call cvode to solve the equations</span></span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="co"># R code to genrate time vector, IC and solve the equations</span></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a>time_vec <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.4</span>, <span class="fl">4.0</span>, <span class="fl">40.0</span>, <span class="fl">4E2</span>, <span class="fl">4E3</span>, <span class="fl">4E4</span>, <span class="fl">4E5</span>, <span class="fl">4E6</span>, <span class="fl">4E7</span>, <span class="fl">4E8</span>, <span class="fl">4E9</span>, <span class="fl">4E10</span>)</span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a>IC <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>)</span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.04</span>, <span class="dv">10000</span>, <span class="dv">30000000</span>)</span>
+<span id="cb4-42"><a href="#cb4-42" tabindex="-1"></a>reltol <span class="ot">&lt;-</span> <span class="fl">1e-04</span></span>
+<span id="cb4-43"><a href="#cb4-43" tabindex="-1"></a>abstol <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1e-8</span>,<span class="fl">1e-14</span>,<span class="fl">1e-6</span>)</span>
+<span id="cb4-44"><a href="#cb4-44" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" tabindex="-1"></a><span class="do">## Solving the ODEs using cvode function</span></span>
+<span id="cb4-46"><a href="#cb4-46" tabindex="-1"></a>df1 <span class="ot">&lt;-</span> <span class="fu">cvode</span>(time_vec, IC, ODE_R , params, reltol, abstol)           <span class="do">## using R</span></span>
+<span id="cb4-47"><a href="#cb4-47" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> <span class="fu">cvode</span>(time_vec, IC, ODE_Rcpp , params, reltol, abstol)        <span class="do">## using Rcpp</span></span>
+<span id="cb4-48"><a href="#cb4-48" tabindex="-1"></a></span>
+<span id="cb4-49"><a href="#cb4-49" tabindex="-1"></a><span class="do">## Check that both solutions are identical</span></span>
+<span id="cb4-50"><a href="#cb4-50" tabindex="-1"></a><span class="co"># identical(df1, df2)</span></span></code></pre></div>
+<p>The final output is the <code>df1</code> matrix in which first column
+is time, second, third and fourth column are the values of
+<code>y1</code>, <code>y2</code> and <code>y3</code> respectively.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="sc">&gt;</span> df1</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>       [,<span class="dv">1</span>]         [,<span class="dv">2</span>]         [,<span class="dv">3</span>]       [,<span class="dv">4</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a> [<span class="dv">1</span>,] <span class="fl">0e+00</span> <span class="fl">1.000000e+00</span> <span class="fl">0.000000e+00</span> <span class="fl">0.00000000</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a> [<span class="dv">2</span>,] <span class="fl">4e-01</span> <span class="fl">9.851641e-01</span> <span class="fl">3.386242e-05</span> <span class="fl">0.01480205</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a> [<span class="dv">3</span>,] <span class="fl">4e+00</span> <span class="fl">9.055097e-01</span> <span class="fl">2.240338e-05</span> <span class="fl">0.09446793</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a> [<span class="dv">4</span>,] <span class="fl">4e+01</span> <span class="fl">7.158016e-01</span> <span class="fl">9.185043e-06</span> <span class="fl">0.28418924</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a> [<span class="dv">5</span>,] <span class="fl">4e+02</span> <span class="fl">4.505209e-01</span> <span class="fl">3.222826e-06</span> <span class="fl">0.54947590</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a> [<span class="dv">6</span>,] <span class="fl">4e+03</span> <span class="fl">1.832217e-01</span> <span class="fl">8.943516e-07</span> <span class="fl">0.81677741</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a> [<span class="dv">7</span>,] <span class="fl">4e+04</span> <span class="fl">3.898091e-02</span> <span class="fl">1.621669e-07</span> <span class="fl">0.96101893</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a> [<span class="dv">8</span>,] <span class="fl">4e+05</span> <span class="fl">4.936971e-03</span> <span class="fl">1.984450e-08</span> <span class="fl">0.99506301</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a> [<span class="dv">9</span>,] <span class="fl">4e+06</span> <span class="fl">5.170103e-04</span> <span class="fl">2.069098e-09</span> <span class="fl">0.99948299</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>[<span class="dv">10</span>,] <span class="fl">4e+07</span> <span class="fl">5.204927e-05</span> <span class="fl">2.082078e-10</span> <span class="fl">0.99994795</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>[<span class="dv">11</span>,] <span class="fl">4e+08</span> <span class="fl">5.184946e-06</span> <span class="fl">2.073989e-11</span> <span class="fl">0.99999482</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>[<span class="dv">12</span>,] <span class="fl">4e+09</span> <span class="fl">5.246212e-07</span> <span class="fl">2.098486e-12</span> <span class="fl">0.99999948</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>[<span class="dv">13</span>,] <span class="fl">4e+10</span> <span class="fl">6.043000e-08</span> <span class="fl">2.417200e-13</span> <span class="fl">0.99999994</span></span></code></pre></div>
+</div>
+</div>
+<div id="solving-a-system-of-differential-algebraic-equations" class="section level2">
+<h2>Solving a system of Differential-Algebraic Equations</h2>
+<p>An interface to the <code>IDA</code> solver is also provided to solve
+a system of Differential-Algebraic equations. A system of
+differential-algebraic equations is a system of equations containing
+both differential and algebraic equations and can be written as <span class="math display">\[
+F(\dot{x}(t), x(t), t) = 0
+\]</span> The equations for such a system are written in terms of
+residuals and require both the value of <span class="math inline">\(x_0\)</span> and <span class="math inline">\(\dot{x}_0\)</span> as the initial conditions.
+Writing the previously solved equations as a system of DAEs, we have,
+<span class="math display">\[
+\begin{aligned}
+\dot{y}_1 &amp;= -p_1y_1 + p_2y_2y_3  \\
+\dot{y}_2 &amp;= p_1y_1 - p_2y_2y_3 - p_3y_2^2 \\
+1 &amp;= y_1 + y_2 + y_3
+\end{aligned}
+\]</span> The above system of DAEs can be written in terms of residuals
+as</p>
+<p><span class="math display">\[
+\begin{aligned}
+res_1 &amp;= -p_1y_1 + p_2y_2y_3 - \dot{y}_1 \\
+res_2 &amp;= p_1y_1 - p_2y_2y_3 - p_3y_2^2 - \dot{y}_2\\
+res_3 &amp;= y_1 + y_2 + y_3 - 1
+\end{aligned}
+\]</span> Here is the complete code for solving this system of DAEs,</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>DAE_R <span class="ot">&lt;-</span> <span class="cf">function</span>(t, y, ydot, p){</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="co"># vector containing the residuals</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  res <span class="ot">=</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">&quot;numeric&quot;</span>, <span class="at">length =</span> <span class="fu">length</span>(y))</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  <span class="co"># R indices start from 1</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  res[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.04</span> <span class="sc">*</span> y[<span class="dv">1</span>] <span class="sc">+</span> <span class="dv">10000</span> <span class="sc">*</span> y[<span class="dv">2</span>] <span class="sc">*</span> y[<span class="dv">3</span>] <span class="sc">-</span> ydot[<span class="dv">1</span>]</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  res[<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="sc">-</span>res[<span class="dv">1</span>] <span class="sc">-</span> <span class="dv">30000000</span> <span class="sc">*</span> y[<span class="dv">2</span>] <span class="sc">*</span> y[<span class="dv">2</span>] <span class="sc">-</span> ydot[<span class="dv">2</span>]</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  res[<span class="dv">3</span>] <span class="ot">&lt;-</span> y[<span class="dv">1</span>] <span class="sc">+</span> y[<span class="dv">2</span>] <span class="sc">+</span> y[<span class="dv">3</span>] <span class="sc">-</span> <span class="fl">1.0</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  res</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>}</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="co"># R code to genrate time vector, IC and solve the equations</span></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>time_vec <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.0</span>, <span class="fl">0.4</span>, <span class="fl">4.0</span>, <span class="fl">40.0</span>, <span class="fl">4E2</span>, <span class="fl">4E3</span>, <span class="fl">4E4</span>, <span class="fl">4E5</span>, <span class="fl">4E6</span>, <span class="fl">4E7</span>, <span class="fl">4E8</span>, <span class="fl">4E9</span>, <span class="fl">4E10</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>IC <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>)                  <span class="co"># Initial value of y</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>IRes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.4</span>, <span class="fl">0.4</span>, <span class="dv">0</span>)         <span class="co"># Initial value of ydot</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.04</span>, <span class="dv">10000</span>, <span class="dv">30000000</span>)</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>reltol <span class="ot">&lt;-</span> <span class="fl">1e-04</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>abstol <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1e-8</span>,<span class="fl">1e-14</span>,<span class="fl">1e-6</span>)</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="do">## Solving the DAEs using the ida function</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>df1 <span class="ot">&lt;-</span> sundialr<span class="sc">::</span><span class="fu">ida</span>(time_vec, IC, IRes, DAE_R , params, reltol, abstol) </span></code></pre></div>
+</div>
+<div id="solving-an-ode-system-with-discontinuties-in-solution" class="section level2">
+<h2>Solving an ODE system with discontinuties in solution</h2>
+<p>The <code>cvsolve</code> function defined in <code>sundialr</code>
+package provides a convenience interface to solve ODEs with one or more
+discontinuities in solution. An example of such a system of ODEs would
+be pharmacokinetics of a drug with repeated bolus administration. Let’s
+look at a simple example of multiple doses of a drug with a first-order
+degradation administered intravenously. The ODE system for the drug is
+<span class="math display">\[
+\frac{dC}{dt} = -k_{el} * C
+\]</span> where <span class="math inline">\(C\)</span> is the
+concentration of the drug and <span class="math inline">\(k_{el}\)</span> is the elimination rate of the
+drug. The <span class="math inline">\(R\)</span> code for such a system
+is</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>ODErepeated_R <span class="ot">&lt;-</span> <span class="cf">function</span>(t, y, p){</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="co"># vector containing the right hand side gradients</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  ydot <span class="ot">=</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">&quot;numeric&quot;</span>, <span class="at">length =</span> <span class="fu">length</span>(y))</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="co"># R indices start from 1</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  ydot[<span class="dv">1</span>] <span class="ot">=</span> <span class="sc">-</span>p[<span class="dv">1</span>]<span class="sc">*</span>y[<span class="dv">1</span>]</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>  ydot</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>}</span></code></pre></div>
+<p>We also need to define when the multiple doses are given and the
+state to which they are to be applied (here to be applied to the only
+state in the model, <span class="math inline">\(C\)</span>). This is
+provided via the <span class="math inline">\(Events\)</span> dataframe
+(here, <span class="math inline">\(TDOSE\)</span> or the dosing
+dataframe).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>TDOSE <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">ID =</span> <span class="dv">1</span>, <span class="at">TIMES =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>, <span class="dv">50</span>), <span class="at">VAL =</span> <span class="dv">100</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>TDOSE</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt;   ID TIMES VAL</span></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; 1  1     0 100</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt; 2  1    10 100</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt; 3  1    20 100</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; 4  1    30 100</span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt; 5  1    40 100</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt; 6  1    50 100</span></span></code></pre></div>
+<p><code>TDOSE</code> is a data frame with the index of the state to
+which discontinuity is to be applied (represented by <code>ID</code>),
+the times at which the discontinuity is to be applied (represented by
+<code>TIMES</code>) at the value to be <strong>added</strong> to the
+value of the state at that time-point. A typical example would be
+addition of the dose amount to the value of the concentration at the
+specified times, e.g., the <code>TDOSE</code> data frame says that a
+value of <code>100</code> is to be added to the concentration of the 1st
+state (the only state in this system) at the times specified by the
+<code>TIMES</code> column. In summary,</p>
+<ul>
+<li><p><code>ID</code> represents the index of the state with
+discontinuity</p></li>
+<li><p><code>TIMES</code> represents the times at which discontinutiy is
+applied</p></li>
+<li><p><code>VAL</code> represents the value <strong>added</strong> to
+the value of the state at specified times.</p></li>
+</ul>
+<p>The complete code for simulating such a system is</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Example of solving a set of ODEs with multiple discontinuities using cvsolve</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co"># A simple One dimensional equation, y = -0.1 * y</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co"># ODEs described by an R function</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>ODE_R <span class="ot">&lt;-</span> <span class="cf">function</span>(t, y, p){</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="co"># vector containing the right hand side gradients</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>  ydot <span class="ot">=</span> <span class="fu">vector</span>(<span class="at">mode =</span> <span class="st">&quot;numeric&quot;</span>, <span class="at">length =</span> <span class="fu">length</span>(y))</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="co"># R indices start from 1</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  ydot[<span class="dv">1</span>] <span class="ot">=</span> <span class="sc">-</span>p[<span class="dv">1</span>]<span class="sc">*</span>y[<span class="dv">1</span>]</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  ydot</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>}</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co"># R code to generate time vector, IC and solve the equations</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>TSAMP <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="at">from =</span> <span class="dv">0</span>, <span class="at">to =</span> <span class="dv">100</span>, <span class="at">by =</span> <span class="fl">0.1</span>)      <span class="co"># sampling time points</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a>IC <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>params <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.1</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co"># A dataset describing the dosing at times at which additions to y[1] are to be done</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co"># Names of the columns don&#39;t matter, but they MUST be in the order of state index,</span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co"># times and Values at discontinuity.</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>TDOSE <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">ID =</span> <span class="dv">1</span>, <span class="at">TIMES =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">40</span>, <span class="dv">50</span>), <span class="at">VAL =</span> <span class="dv">100</span>)</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>df1 <span class="ot">&lt;-</span> sundialr<span class="sc">::</span><span class="fu">cvsolve</span>(TSAMP, <span class="fu">c</span>(<span class="dv">1</span>), ODE_R, params)         <span class="co"># solving without any discontinuity</span></span>
+<span id="cb9-27"><a href="#cb9-27" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> sundialr<span class="sc">::</span><span class="fu">cvsolve</span>(TSAMP, <span class="fu">c</span>(<span class="dv">1</span>), ODE_R, params, TDOSE)  <span class="co"># solving with discontinuity</span></span>
+<span id="cb9-28"><a href="#cb9-28" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" tabindex="-1"></a><span class="do">## Plot the solution with discontinuities</span></span>
+<span id="cb9-30"><a href="#cb9-30" tabindex="-1"></a><span class="do">## first column is time, second column is the state</span></span>
+<span id="cb9-31"><a href="#cb9-31" tabindex="-1"></a>time <span class="ot">&lt;-</span> df2[,<span class="dv">1</span>]</span>
+<span id="cb9-32"><a href="#cb9-32" tabindex="-1"></a>y1 <span class="ot">&lt;-</span> df2[,<span class="dv">2</span>]</span>
+<span id="cb9-33"><a href="#cb9-33" tabindex="-1"></a><span class="fu">plot</span>(time, y1, <span class="at">type =</span> <span class="st">&quot;l&quot;</span>, <span class="at">lty =</span> <span class="dv">1</span>, <span class="at">main =</span> <span class="st">&quot;An ODE system with discontinuties&quot;</span>, <span class="at">frame.plot =</span> F)   </span></code></pre></div>
+<p><img role="img" aria-label src="data:image/png;base64,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" alt /></p>
+<p>Note that in the example above, <code>TSAMP</code> is the sampling
+time at which the solution is desired. The value in the
+<code>Events</code> input is always <em>added</em> to the current value
+of the state, and this applies at the initial time as well: the Initial
+Value of <span class="math inline">\(y_1\)</span> of 1 provided by the
+<code>IC</code> parameter is the starting point, and the value of 100
+provided in the <code>TDOSE</code> data frame at <span class="math inline">\(t = 0\)</span> is added to it, so <span class="math inline">\(y_1\)</span> starts at 101. The initial conditions
+are never discarded, and several events at the same time on one state
+accumulate.</p>
+<p>Prior to version 0.2.0 an event at <span class="math inline">\(t =
+0\)</span> <em>replaced</em> the initial condition rather than adding to
+it, so the same value meant different things at <span class="math inline">\(t = 0\)</span> and at later times. Solutions that
+dose at time zero therefore differ from earlier versions by the initial
+condition.</p>
+</div>
+<div id="system-of-odes-for-parameter-sensitivities" class="section level2">
+<h2>System of ODEs for Parameter Sensitivities</h2>
+<p>Sensitivity with respect to the parameters of the ODE system can be
+calculated using <code>CVODES</code> function. This package implements
+Forward Sensitivity Analysis from <code>CVODES</code> function (see the
+example <code>cvRoberts_FSA_dns.c</code> from the link <a href="https://github.com/LLNL/sundials/blob/master/examples/cvodes/serial/cvsRoberts_FSA_dns.c">here</a>).
+Briefly, given the ODE system as described below</p>
+<p><span class="math display">\[
+\begin{aligned}
+\frac{dy_1}{dt} &amp;= -p_1y_1 + p_2y_2y_3  \\
+\frac{dy_2}{dt} &amp;= p_1y_1 - p_2y_2y_3 - p_3y_2^2 \\
+\frac{dy_3}{dt} &amp;= p_3y_2^2
+\end{aligned}
+\]</span> with the same initial conditions as above (i.e., <span class="math inline">\(y_1 = 0, y_2 = y_3 = 0\)</span>) and <span class="math inline">\(p_1 = 0.04, \quad p_2 = 10^4, \quad p_3 =
+3\times10^7\)</span>. The system of Sensitivity equations (taken from
+<code>cvs_guide.pdf</code>) that is solved can be given by <span class="math display">\[
+\begin{aligned}
+\frac{ds}{dt} =
+\left[\begin{array}
+{ccc}
+-p_1 &amp; p_2y_3 &amp; p_2y_2 \\
+p_1 &amp; -p_2y_3-2p_3y_2 &amp; -p_2y_2 \\
+0 &amp; 2p_3y_2 &amp; 0
+\end{array}\right]s_i + \frac{\partial f}{\partial p_i},
+\quad s_i(t_0) =
+\left[\begin{array}  {c} 0 \\ 0 \\ 0 \end{array}\right], \quad i = 1, 2,
+3
+\end{aligned}
+\]</span> where <span class="math display">\[
+\frac{\partial f}{\partial p_1} = \left[\begin{array}  {c} -y_1 \\ y_1
+\\ 0 \end{array}\right],
+\quad \frac{\partial f}{\partial p_2} = \left[\begin{array}  {c} y_2y_3
+\\ -y_2y_3 \\ 0 \end{array}\right],
+\quad
+\frac{\partial f}{\partial p_3} = \left[\begin{array}  {c} 0 \\ -y_2^2
+\\ y_2^2 \end{array}\right]
+\]</span> In the original <code>CVODES</code> interface from
+<code>SUNDIALS</code>, the sensitivity equations can either be provided
+by the user or can be calculated using numerical interpolation by the
+solver. Here, I have only included the numerical interpolation version
+and currently the user cannot specify the sensitivity equations.
+However, in the future versions I will provide an ability to specify
+user-defined Jacobian as well as user-defined sensitivity equations.</p>
+<p>Also, currently, forward sensitivities are calculated with respect to
+all parameters of the system. I plan to provide in future, an ability to
+specify specific particular parameters for which sensitivity is desired.
+Currently, <code>SIMULATENOUS</code> and <code>STAGGERED</code> methods
+of sensitivity calculations from the <code>SUNDIALS</code> library are
+supported in this package.</p>
+</div>
+<div id="calculation-of-sensitivities-using-cvodes" class="section level2">
+<h2>Calculation of Sensitivities using <code>CVODES</code></h2>
+<p>Once, the system of ODEs has been defined using the instructions
+provided above, sensitivities can be easily calculated using the
+<code>cvodes</code> function using the function call below (the entire
+code can be found at this <a href="https://github.com/sn248/sundialr/blob/master/inst/examples/cvs_Roberts_dns.r">link</a>)</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>df1 <span class="ot">&lt;-</span> <span class="fu">cvodes</span>(time_vec, IC, ODE_R , params, reltol, abstol,<span class="st">&quot;STG&quot;</span>,F)  <span class="do">## using R</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> <span class="fu">cvodes</span>(time_vec, IC, ODE_Rcpp , params, reltol, abstol,<span class="st">&quot;STG&quot;</span>,F)  <span class="do">## using Rcpp</span></span></code></pre></div>
+<p>The additional arguments in <code>cvodes</code> specify the
+senstivity calculation method to be used (<code>STG</code> for
+<code>STAGGERED</code> or <code>SIM</code> for
+<code>SIMULATENOUS</code>) and flag for error control (either
+<code>T</code> or <code>F</code>).</p>
+<p>The output of <code>cvodes</code> is a matrix with number of rows
+equal to the length of the time vector (<code>time_vec</code>) and the
+number of columns being equal to length of (<code>y</code> <span class="math inline">\(\times\)</span> <code>p</code> + 1). The first
+columns is for time. Currently, the sensitivity of every enitity is
+calculated with respect to every parameter in model. For example, for
+the current model with <code>3</code> entities (ODEs) and <code>3</code>
+parameters, a total of <code>9</code> sensitivities are calculated at
+each output time, i.e. <code>y1</code> w.r.t <code>p1</code>,
+<code>p2</code>, <code>p3</code>, <code>y2</code> w.r.t.
+<code>p1</code>, <code>p2</code>, <code>p3</code> and so on. The first 3
+(<code>length(y)</code>) columns give sensitivity w.r.t the first
+parameter, the next 3 (<code>length(y)</code>) columns give sensitivity
+w.r.t the second parameter and so on.</p>
+<p>In the Sensitivity Matrix output for the systems of equations
+described above, the first column gives output time, the next
+<code>3</code> columns provide sensitivity of <code>y1</code>,
+<code>y2</code> and <code>y3</code> w.r.t first parameter (say
+<code>p1</code>), the next three columns provide sensitivity of
+<code>y1</code>, <code>y2</code> and <code>y3</code> w.r.t. the second
+parameter (<code>p2</code>) and so on. The output Sensitivity Matrix is
+given below. The sensitivity values match with the values provided in
+the <code>CVODES</code> documentation.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="sc">&gt;</span> df1</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>       [,<span class="dv">1</span>]          [,<span class="dv">2</span>]          [,<span class="dv">3</span>]         [,<span class="dv">4</span>]         [,<span class="dv">5</span>]          [,<span class="dv">6</span>]          [,<span class="dv">7</span>]          [,<span class="dv">8</span>]          [,<span class="dv">9</span>]        [,<span class="dv">10</span>]</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a> [<span class="dv">1</span>,] <span class="fl">0e+00</span>  <span class="fl">0.000000e+00</span>  <span class="fl">0.000000e+00</span> <span class="fl">0.000000e+00</span> <span class="fl">0.000000e+00</span>  <span class="fl">0.000000e+00</span>  <span class="fl">0.000000e+00</span>  <span class="fl">0.000000e+00</span>  <span class="fl">0.000000e+00</span> <span class="fl">0.000000e+00</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a> [<span class="dv">2</span>,] <span class="fl">4e-01</span> <span class="sc">-</span><span class="fl">3.561085e-01</span>  <span class="fl">3.902252e-04</span> <span class="fl">3.557183e-01</span> <span class="fl">9.483149e-08</span> <span class="sc">-</span><span class="fl">2.132509e-10</span> <span class="sc">-</span><span class="fl">9.461823e-08</span> <span class="sc">-</span><span class="fl">1.573297e-11</span> <span class="sc">-</span><span class="fl">5.289692e-13</span> <span class="fl">1.626194e-11</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a> [<span class="dv">3</span>,] <span class="fl">4e+00</span> <span class="sc">-</span><span class="fl">1.876130e+00</span>  <span class="fl">1.792229e-04</span> <span class="fl">1.875951e+00</span> <span class="fl">2.961233e-06</span> <span class="sc">-</span><span class="fl">5.830758e-10</span> <span class="sc">-</span><span class="fl">2.960650e-06</span> <span class="sc">-</span><span class="fl">4.932970e-10</span> <span class="sc">-</span><span class="fl">2.762408e-13</span> <span class="fl">4.935732e-10</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a> [<span class="dv">4</span>,] <span class="fl">4e+01</span> <span class="sc">-</span><span class="fl">4.247395e+00</span>  <span class="fl">4.592812e-05</span> <span class="fl">4.247349e+00</span> <span class="fl">1.372964e-05</span> <span class="sc">-</span><span class="fl">2.357270e-10</span> <span class="sc">-</span><span class="fl">1.372941e-05</span> <span class="sc">-</span><span class="fl">2.288274e-09</span> <span class="sc">-</span><span class="fl">1.138015e-13</span> <span class="fl">2.288387e-09</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a> [<span class="dv">5</span>,] <span class="fl">4e+02</span> <span class="sc">-</span><span class="fl">5.958192e+00</span>  <span class="fl">3.545986e-06</span> <span class="fl">5.958189e+00</span> <span class="fl">2.273754e-05</span> <span class="sc">-</span><span class="fl">2.260807e-11</span> <span class="sc">-</span><span class="fl">2.273752e-05</span> <span class="sc">-</span><span class="fl">3.789554e-09</span> <span class="sc">-</span><span class="fl">4.994795e-14</span> <span class="fl">3.789604e-09</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a> [<span class="dv">6</span>,] <span class="fl">4e+03</span> <span class="sc">-</span><span class="fl">4.750132e+00</span> <span class="sc">-</span><span class="fl">5.991971e-06</span> <span class="fl">4.750138e+00</span> <span class="fl">1.880937e-05</span>  <span class="fl">2.312156e-11</span> <span class="sc">-</span><span class="fl">1.880939e-05</span> <span class="sc">-</span><span class="fl">3.134824e-09</span> <span class="sc">-</span><span class="fl">1.875976e-14</span> <span class="fl">3.134843e-09</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a> [<span class="dv">7</span>,] <span class="fl">4e+04</span> <span class="sc">-</span><span class="fl">1.574902e+00</span> <span class="sc">-</span><span class="fl">2.761679e-06</span> <span class="fl">1.574905e+00</span> <span class="fl">6.288404e-06</span>  <span class="fl">1.100645e-11</span> <span class="sc">-</span><span class="fl">6.288415e-06</span> <span class="sc">-</span><span class="fl">1.047876e-09</span> <span class="sc">-</span><span class="fl">4.536508e-15</span> <span class="fl">1.047881e-09</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a> [<span class="dv">8</span>,] <span class="fl">4e+05</span> <span class="sc">-</span><span class="fl">2.363168e-01</span> <span class="sc">-</span><span class="fl">4.584043e-07</span> <span class="fl">2.363173e-01</span> <span class="fl">9.450741e-07</span>  <span class="fl">1.832930e-12</span> <span class="sc">-</span><span class="fl">9.450760e-07</span> <span class="sc">-</span><span class="fl">1.574929e-10</span> <span class="sc">-</span><span class="fl">6.362045e-16</span> <span class="fl">1.574935e-10</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a> [<span class="dv">9</span>,] <span class="fl">4e+06</span> <span class="sc">-</span><span class="fl">2.566355e-02</span> <span class="sc">-</span><span class="fl">5.105587e-08</span> <span class="fl">2.566361e-02</span> <span class="fl">1.026491e-07</span>  <span class="fl">2.042044e-13</span> <span class="sc">-</span><span class="fl">1.026493e-07</span> <span class="sc">-</span><span class="fl">1.711080e-11</span> <span class="sc">-</span><span class="fl">6.851356e-17</span> <span class="fl">1.711087e-11</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a>[<span class="dv">10</span>,] <span class="fl">4e+07</span> <span class="sc">-</span><span class="fl">2.597859e-03</span> <span class="sc">-</span><span class="fl">5.190342e-09</span> <span class="fl">2.597864e-03</span> <span class="fl">1.039134e-08</span>  <span class="fl">2.076100e-14</span> <span class="sc">-</span><span class="fl">1.039136e-08</span> <span class="sc">-</span><span class="fl">1.732552e-12</span> <span class="sc">-</span><span class="fl">6.930923e-18</span> <span class="fl">1.732559e-12</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a>[<span class="dv">11</span>,] <span class="fl">4e+08</span> <span class="sc">-</span><span class="fl">2.601996e-04</span> <span class="sc">-</span><span class="fl">5.199259e-10</span> <span class="fl">2.602002e-04</span> <span class="fl">1.040802e-09</span>  <span class="fl">2.079717e-15</span> <span class="sc">-</span><span class="fl">1.040804e-09</span> <span class="sc">-</span><span class="fl">1.737821e-13</span> <span class="sc">-</span><span class="fl">6.951356e-19</span> <span class="fl">1.737828e-13</span></span>
+<span id="cb11-14"><a href="#cb11-14" tabindex="-1"></a>[<span class="dv">12</span>,] <span class="fl">4e+09</span> <span class="sc">-</span><span class="fl">2.648142e-05</span> <span class="sc">-</span><span class="fl">5.616896e-11</span> <span class="fl">2.648147e-05</span> <span class="fl">1.059193e-10</span>  <span class="fl">2.246502e-16</span> <span class="sc">-</span><span class="fl">1.059195e-10</span> <span class="sc">-</span><span class="fl">1.804535e-14</span> <span class="sc">-</span><span class="fl">7.218146e-20</span> <span class="fl">1.804542e-14</span></span>
+<span id="cb11-15"><a href="#cb11-15" tabindex="-1"></a>[<span class="dv">13</span>,] <span class="fl">4e+10</span> <span class="sc">-</span><span class="fl">2.899376e-06</span> <span class="sc">-</span><span class="fl">7.759920e-12</span> <span class="fl">2.899383e-06</span> <span class="fl">1.159764e-11</span>  <span class="fl">3.104024e-17</span> <span class="sc">-</span><span class="fl">1.159768e-11</span> <span class="sc">-</span><span class="fl">1.727574e-15</span> <span class="sc">-</span><span class="fl">6.910296e-21</span> <span class="fl">1.727581e-15</span></span></code></pre></div>
+<p>In future, I intend to provide options to select specific entities
+and parameters with respect to which sensitivities are to be computed as
+the sensitivity matrix can get very large for medium to large
+models.</p>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<ul>
+<li><p>The package <code>sundialr</code> provides a way to interface
+with the famous <code>SUNDIALS</code> C library (provided by Lawerence
+Livermore National Security) to solver initial value problems.</p></li>
+<li><p>The package allows the system of differential equations to be
+written in <code>R</code> or using <code>Rcpp</code>. Function
+<code>cvode</code> is used to solve initial value problems with a single
+initialization, but problems with multiple discontinuities in the
+solution can be solved using the <code>cvsolve</code>
+interface.</p></li>
+<li><p>For sensitivities, currently, calculation of forward
+sensitivities for all entities with respect to all the parameters in the
+model is implemented in the <code>cvodes</code> function. An ability to
+select specific entities and parameters for which sensitivities is to be
+calculated will be added soon.</p></li>
+<li><p>To solve a system of differential algebraic systems, the
+<code>ida</code> function is provided which is an interface to the
+<code>IDA</code> function in <code>SUNDIALS</code>.</p></li>
+</ul>
+<p>As a note, since this package is under active development, the
+interfaces of both <code>CVODE</code> and <code>CVODES</code> (i.e., the
+function signatures) may change in the future versions. Please keep this
+mind if you intend to use <code>sundialr</code> in your applications. In
+near future, interface for other solvers from the <code>C</code> library
+such as<code>IDAS</code> and <code>ARKODE</code> may also be added.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
