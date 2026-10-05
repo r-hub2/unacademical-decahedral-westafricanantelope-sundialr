@@ -25,7 +25,7 @@ Encoding: UTF-8
 NeedsCompilation: yes
 VignetteBuilder: knitr
 Config/roxygen2/version: 8.1.0
-Packaged: 2026-10-05 02:48:39 UTC; quantilogy
+Packaged: 2026-10-05 12:22:50 UTC; quantilogy
 Author: Satyaprakash Nayak [aut, cre, cph] (ORCID:
     <https://orcid.org/0000-0001-7225-1317>),
   Lawrence Livermore National Security [cph],
